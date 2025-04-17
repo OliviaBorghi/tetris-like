@@ -244,6 +244,7 @@ function clearLines() {
             board.splice(y, 1);
             board.unshift(Array(COLS).fill(0));
             clears -= 10;
+            clearLines();
         }
     }
 }
