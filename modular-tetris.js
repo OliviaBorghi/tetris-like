@@ -27,6 +27,9 @@ const TETROMINOS = [
 // Active Tetromino
 let currentTetromino = { shape: null, x: 0, y: 0, color: null };
 
+// Move Interval for moveDown
+let moveDownInterval = null; // Store the interval for move down
+
 // Generate a random Tetromino
 function getRandomTetromino() {
     const index = Math.floor(Math.random() * TETROMINOS.length);
@@ -46,6 +49,9 @@ function drawBoard() {
             if (board[y][x] !== 0) {
                 ctx.fillStyle = COLORS[board[y][x] - 1];
                 ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                ctx.strokeStyle = 'black'; // Set the outline color to black
+                ctx.lineWidth = 2; // Set the line width for the outline
+                ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE); // Draw the outline
             }
         }
     }
@@ -57,9 +63,46 @@ function drawBoard() {
             for (let x = 0; x < currentTetromino.shape[y].length; x++) {
                 if (currentTetromino.shape[y][x] !== 0) {
                     ctx.fillRect((currentTetromino.x + x) * BLOCK_SIZE, (currentTetromino.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect((currentTetromino.x + x) * BLOCK_SIZE, (currentTetromino.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                 }
             }
         }
+    }
+}
+
+// Handle keydown event
+function handleKeyPress(event) {
+    switch (event.key) {
+        case 'a':
+            moveTetrominoLeft();
+            break;
+        case 'd':
+            moveTetrominoRight();
+            break;
+        case 's':
+            startMoveDown();
+            break;
+        case 'q':
+            rotateTetrominoAntiClockwise();
+            break;
+        case 'e':
+            rotateTetrominoClockwise();
+            break;
+        default:
+            break; // Ignore other keys
+    }
+}
+
+// Handle keyup event
+function handleKeyRelease(event) {
+    switch (event.key) {
+        case 's':
+            stopMoveDown();
+            break;
+        default:
+            break; // Ignore other keys
     }
 }
 
@@ -75,6 +118,71 @@ function moveTetrominoDown() {
             resetGame();
         }
     }
+    drawBoard();
+}
+
+// Start moving the Tetromino down continuously
+function startMoveDown() {
+    if (!moveDownInterval) {
+        moveDownInterval = setInterval(moveTetrominoDown, 100); // Move every 100ms
+    }
+}
+
+// Stop moving the Tetromino down
+function stopMoveDown() {
+    if (moveDownInterval) {
+        clearInterval(moveDownInterval); // Stop the interval
+        moveDownInterval = null;
+    }
+}
+
+// Move the Tetromino left
+function moveTetrominoLeft() {
+    currentTetromino.x--;
+    if (collisionDetected()) {
+        currentTetromino.x++;
+    }
+    drawBoard();
+}
+
+// Move the Tetromino right
+function moveTetrominoRight() {
+    currentTetromino.x++;
+    if (collisionDetected()) {
+        currentTetromino.x--;
+    }
+    drawBoard();
+}
+
+// Rotate the Tetromino Clockwise
+function rotateTetrominoClockwise() {
+    const originalShape = currentTetromino.shape;
+    currentTetromino.shape = rotateMatrixClockwise(currentTetromino.shape);
+    if (collisionDetected()) {
+        currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
+    }
+    drawBoard();
+}
+
+// Rotate the Tetromino AntiClockwise
+function rotateTetrominoAntiClockwise() {
+    const originalShape = currentTetromino.shape;
+    currentTetromino.shape = rotateMatrixAntiClockwise(currentTetromino.shape);
+    if (collisionDetected()) {
+        currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
+    }
+    drawBoard();
+}
+
+// Helper function to rotate the tetromino matrix
+function rotateMatrixAntiClockwise(matrix) {
+    return matrix[0].map((_, colIndex) =>
+        matrix.map(row => row[row.length - 1 - colIndex])
+    );
+}
+
+function rotateMatrixClockwise(matrix) {
+    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]).reverse());
 }
 
 // Check for collision
@@ -84,7 +192,7 @@ function collisionDetected() {
             if (currentTetromino.shape[y][x] !== 0) {
                 const boardX = currentTetromino.x + x;
                 const boardY = currentTetromino.y + y;
-                if (boardY >= ROWS || boardX < 0 || boardX >= COLS || board[boardY][boardX] !== 0) {
+                if (boardY >= ROWS || boardX < 0 || boardX >= COLS || board[boardY][boardX] !== 0 )  {
                     return true;
                 }
             }
@@ -136,3 +244,6 @@ function resetGame() {
 
 // Start the game
 resetGame();
+
+document.addEventListener('keydown', handleKeyPress);
+document.addEventListener('keyup', handleKeyRelease);
