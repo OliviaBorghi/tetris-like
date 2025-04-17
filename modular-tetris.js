@@ -10,6 +10,9 @@ const COLS = 10;
 const BLOCK_SIZE = 30; // Size of each block (in pixels)
 const COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffffff'];
 
+//How fast are we going?
+let clears = 0;
+
 // The game board, 2D array initialized with 0 (empty cells)
 let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
@@ -158,7 +161,7 @@ function moveTetrominoRight() {
 function rotateTetrominoClockwise() {
     const originalShape = currentTetromino.shape;
     currentTetromino.shape = rotateMatrixClockwise(currentTetromino.shape);
-    if (collisionDetected()) {
+    if (rotateCollisionDetected()) {
         currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
     }
     drawBoard();
@@ -168,7 +171,7 @@ function rotateTetrominoClockwise() {
 function rotateTetrominoAntiClockwise() {
     const originalShape = currentTetromino.shape;
     currentTetromino.shape = rotateMatrixAntiClockwise(currentTetromino.shape);
-    if (collisionDetected()) {
+    if (rotateCollisionDetected()) {
         currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
     }
     drawBoard();
@@ -201,6 +204,27 @@ function collisionDetected() {
     return false;
 }
 
+function rotateCollisionDetected() {
+    for (let y = 0; y < currentTetromino.shape.length; y++) {
+        for (let x = 0; x < currentTetromino.shape[y].length; x++) {
+            if (currentTetromino.shape[y][x] !== 0) {
+                const boardX = currentTetromino.x + x;
+                const boardY = currentTetromino.y + y;
+                if( boardX >= COLS){
+                    currentTetromino.x --;
+                }
+                if( boardX < 0){
+                    currentTetromino.x ++;
+                }
+                if (boardY >= ROWS || board[boardY][boardX] !== 0 )  {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 // Place the Tetromino on the board
 function placeTetromino() {
     for (let y = 0; y < currentTetromino.shape.length; y++) {
@@ -219,6 +243,7 @@ function clearLines() {
         if (board[y].every(cell => cell !== 0)) {
             board.splice(y, 1);
             board.unshift(Array(COLS).fill(0));
+            clears -= 10;
         }
     }
 }
@@ -232,7 +257,7 @@ function update() {
 // Game loop
 function gameLoop() {
     update();
-    setTimeout(gameLoop, 500); // Adjust the speed here (500ms)
+    setTimeout(gameLoop, 500 + clears); // Adjust the speed here (500ms)
 }
 
 // Reset the game
