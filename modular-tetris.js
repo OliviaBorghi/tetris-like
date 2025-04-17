@@ -4,11 +4,18 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+
+
 // Game settings
-const ROWS = 20;
-const COLS = 10;
+const ROWS = 15;
+const COLS = 40;
 const BLOCK_SIZE = 30; // Size of each block (in pixels)
-const COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffffff'];
+const COLORS = ['red', 'blue', 'lightgreen', 'yellow', 'cyan', 'magenta', 'pink'];
+
+//update canvas size
+canvas.width = COLS*BLOCK_SIZE;
+canvas.height = ROWS*BLOCK_SIZE;
+
 
 //How fast are we going?
 let clears = 0;
@@ -37,7 +44,14 @@ let moveDownInterval = null; // Store the interval for move down
 function getRandomTetromino() {
     const index = Math.floor(Math.random() * TETROMINOS.length);
     const shape = TETROMINOS[index];
-    const color = COLORS[index];
+    //const color = COLORS[index];
+    let color = []
+    for(let y = 0; y< shape.length; y++){
+        color[y] = []
+        for(let x = 0; x < shape[0].length; x++){
+            color[y][x] = COLORS[index];
+        }
+    }
     return { shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0, color };
 }
 
@@ -61,9 +75,9 @@ function drawBoard() {
 
     // Draw the current Tetromino
     if (currentTetromino.shape) {
-        ctx.fillStyle = currentTetromino.color;
         for (let y = 0; y < currentTetromino.shape.length; y++) {
-            for (let x = 0; x < currentTetromino.shape[y].length; x++) {
+            for (let x = 0; x < currentTetromino.shape[0].length; x++) {
+                ctx.fillStyle = currentTetromino.color[y][x];
                 if (currentTetromino.shape[y][x] !== 0) {
                     ctx.fillRect((currentTetromino.x + x) * BLOCK_SIZE, (currentTetromino.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                     ctx.strokeStyle = 'black';
@@ -160,9 +174,12 @@ function moveTetrominoRight() {
 // Rotate the Tetromino Clockwise
 function rotateTetrominoClockwise() {
     const originalShape = currentTetromino.shape;
+    const originalColor = currentTetromino.color;
     currentTetromino.shape = rotateMatrixClockwise(currentTetromino.shape);
+    currentTetromino.color = rotateMatrixClockwise(currentTetromino.color);
     if (rotateCollisionDetected()) {
         currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
+        currentTetromino.colore = originalColor;
     }
     drawBoard();
 }
@@ -170,9 +187,13 @@ function rotateTetrominoClockwise() {
 // Rotate the Tetromino AntiClockwise
 function rotateTetrominoAntiClockwise() {
     const originalShape = currentTetromino.shape;
+    const originalColor = currentTetromino.color;
     currentTetromino.shape = rotateMatrixAntiClockwise(currentTetromino.shape);
+        currentTetromino.color = rotateMatrixAntiClockwise(currentTetromino.color);
+
     if (rotateCollisionDetected()) {
         currentTetromino.shape = originalShape; // Undo the rotation if there's a collision
+        currentTetromino.color = originalColor;
     }
     drawBoard();
 }
@@ -206,7 +227,7 @@ function collisionDetected() {
 
 function rotateCollisionDetected() {
     for (let y = 0; y < currentTetromino.shape.length; y++) {
-        for (let x = 0; x < currentTetromino.shape[y].length; x++) {
+        for (let x = 0; x < currentTetromino.shape[0].length; x++) {
             if (currentTetromino.shape[y][x] !== 0) {
                 const boardX = currentTetromino.x + x;
                 const boardY = currentTetromino.y + y;
@@ -228,9 +249,9 @@ function rotateCollisionDetected() {
 // Place the Tetromino on the board
 function placeTetromino() {
     for (let y = 0; y < currentTetromino.shape.length; y++) {
-        for (let x = 0; x < currentTetromino.shape[y].length; x++) {
+        for (let x = 0; x < currentTetromino.shape[0].length; x++) {
             if (currentTetromino.shape[y][x] !== 0) {
-                board[currentTetromino.y + y][currentTetromino.x + x] = COLORS.indexOf(currentTetromino.color) + 1;
+                board[currentTetromino.y + y][currentTetromino.x + x] = COLORS.indexOf(currentTetromino.color[y][x]) + 1;
             }
         }
     }
@@ -239,12 +260,13 @@ function placeTetromino() {
 
 // Clear full lines
 function clearLines() {
-    for (let y = ROWS - 1; y >= 0; y--) {
+    for (let y = ROWS - 1; y >= 0; ) {
         if (board[y].every(cell => cell !== 0)) {
             board.splice(y, 1);
             board.unshift(Array(COLS).fill(0));
             clears -= 10;
-            clearLines();
+        } else {
+            y--;
         }
     }
 }
