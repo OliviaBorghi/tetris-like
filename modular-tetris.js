@@ -7,10 +7,15 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game settings
-const ROWS = 15;
-const COLS = 40;
+const ROWS = 20;
+const COLS = 10;
 const BLOCK_SIZE = 30;
 const COLORS = ['red', 'blue', 'lightgreen', 'yellow', 'cyan', 'magenta', 'pink'];
+
+// Sounds
+const rotateClockwiseSound = new Audio('sounds/rotateClockwise.wav')
+const rotateAntiClockwiseSound = new Audio('sounds/rotateAntiClockwise.wav')
+const lineClearSound = new Audio('sounds/lineClear.wav')
 
 // Resize canvas to fit the grid
 canvas.width = COLS * BLOCK_SIZE;
@@ -172,7 +177,9 @@ function rotateTetrominoClockwise() {
   if (rotateCollisionDetected()) {
     currentTetromino.shape = originalShape;
     currentTetromino.color = originalColor;
+    return;
   }
+  rotateClockwiseSound.play();
   drawBoard();
 }
 
@@ -185,7 +192,9 @@ function rotateTetrominoAntiClockwise() {
   if (rotateCollisionDetected()) {
     currentTetromino.shape = originalShape;
     currentTetromino.color = originalColor;
+    return;
   }
+  rotateAntiClockwiseSound.play();
   drawBoard();
 }
 
@@ -248,6 +257,7 @@ function placeTetromino() {
 function clearLines() {
   for (let y = ROWS - 1; y >= 0; ) {
     if (board[y].every(cell => cell !== 0)) {
+      lineClearSound.play();
       board.splice(y, 1); // Remove the filled row
       board.unshift(Array(COLS).fill(0)); // Add an empty row at the top
       clears -= 10; // Increase speed slightly
