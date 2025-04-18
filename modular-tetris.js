@@ -16,6 +16,8 @@ const COLORS = ['red', 'blue', 'lightgreen', 'yellow', 'cyan', 'magenta', 'pink'
 const rotateClockwiseSound = new Audio('sounds/rotateClockwise.wav')
 const rotateAntiClockwiseSound = new Audio('sounds/rotateAntiClockwise.wav')
 const lineClearSound = new Audio('sounds/lineClear.wav')
+const tetrisSound = new Audio('sounds/tetris.wav')
+const pauseSound = new Audio('sounds/pause.wav')
 
 // Resize canvas to fit the grid
 canvas.width = COLS * BLOCK_SIZE;
@@ -255,9 +257,10 @@ function placeTetromino() {
 }
 
 function clearLines() {
+  let clearTimes = 0;
   for (let y = ROWS - 1; y >= 0; ) {
     if (board[y].every(cell => cell !== 0)) {
-      lineClearSound.play();
+      clearTimes ++;
       board.splice(y, 1); // Remove the filled row
       board.unshift(Array(COLS).fill(0)); // Add an empty row at the top
       clears -= 10; // Increase speed slightly
@@ -265,12 +268,20 @@ function clearLines() {
       y--;
     }
   }
+  if(clearTimes == 0){
+    return;
+  }else if (clearTimes == 4){
+    tetrisSound.play();
+  }else {
+    lineClearSound.play();
+  }
 }
 
 function togglePause() {
   isPaused = !isPaused;
   if (isPaused) {
     stopMoveDown(); // Stop fast drop if active
+    pauseSound.play();
     drawPauseOverlay();
   } else {
     drawBoard(); // Redraw the board when resuming
