@@ -19,6 +19,10 @@ const lineClearSound = new Audio('sounds/lineClear.wav')
 const tetrisSound = new Audio('sounds/tetris.wav')
 const pauseSound = new Audio('sounds/pause.wav')
 
+// Music
+const bgMusic = new Audio('sounds/bgMusic.wav')
+bgMusic.loop = true;
+
 // Resize canvas to fit the grid
 canvas.width = COLS * BLOCK_SIZE;
 canvas.height = ROWS * BLOCK_SIZE;
@@ -74,6 +78,12 @@ function getRandomTetromino() {
 // Draw the game board and active tetromino
 function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Set bg color
+  ctx.fillStyle = 'white';
+
+  // Draw bg
+  ctx.fillRect(0, 0, canvas.width, canvas.height); 
 
   // Draw the board cells
   for (let y = 0; y < ROWS; y++) {
@@ -281,15 +291,34 @@ function togglePause() {
   isPaused = !isPaused;
   if (isPaused) {
     stopMoveDown(); // Stop fast drop if active
+    bgMusic.pause();
     pauseSound.play();
     drawPauseOverlay();
   } else {
+    bgMusic.play();
     drawBoard(); // Redraw the board when resuming
   }
 }
 
 
 // ========== Game Loop ========== //
+function showStartScreen() {
+  const startScreen = document.getElementById('start-screen');
+  startScreen.style.display = 'flex';
+
+  function startGameHandler() {
+    startScreen.style.display = 'none';
+    document.removeEventListener('keydown', startGameHandler);
+
+    // Start the game loop after the start screen disappears
+    bgMusic.play().catch(err => console.warn("Autoplay prevented:", err));
+    resetGame();
+    gameLoop(); // Start the game loop manually after resetGame
+  }
+
+  document.addEventListener('keydown', startGameHandler);
+}
+
 
 function update() {
   if (!isPaused) {
@@ -306,6 +335,7 @@ function gameLoop() {
 
 function resetGame() {
   board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+  bgMusic.play();
   currentTetromino = getRandomTetromino();
   drawBoard();
   gameLoop();
@@ -343,4 +373,4 @@ function handleKeyRelease(event) {
 // Start the game
 document.addEventListener('keydown', handleKeyPress);
 document.addEventListener('keyup', handleKeyRelease);
-resetGame();
+showStartScreen();
