@@ -19,6 +19,9 @@ canvas.height = ROWS * BLOCK_SIZE;
 // Track how many lines have been cleared (used to adjust speed)
 let clears = 0;
 
+// Keep track of game state
+let isPaused = false;
+
 // 2D board initialized with 0s (empty cells)
 let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
@@ -98,7 +101,18 @@ function drawCellOutline(x, y) {
   ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 }
 
-// ========== Movement and Collision ========== //
+function drawPauseOverlay() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'white';
+  ctx.font = '48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Paused', canvas.width / 2, canvas.height / 2);
+}
+
+
+// ========== Movement ========== //
 
 function moveTetrominoDown() {
   currentTetromino.y++;
@@ -243,17 +257,31 @@ function clearLines() {
   }
 }
 
+function togglePause() {
+  isPaused = !isPaused;
+  if (isPaused) {
+    stopMoveDown(); // Stop fast drop if active
+    drawPauseOverlay();
+  } else {
+    drawBoard(); // Redraw the board when resuming
+  }
+}
+
+
 // ========== Game Loop ========== //
 
 function update() {
-  moveTetrominoDown();
-  drawBoard();
+  if (!isPaused) {
+    moveTetrominoDown();
+    drawBoard();
+  }
 }
 
 function gameLoop() {
   update();
-  setTimeout(gameLoop, 500 + clears); // Decrease interval as clears increases
+  setTimeout(gameLoop, 500 + clears);
 }
+
 
 function resetGame() {
   board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -267,25 +295,28 @@ function resetGame() {
 function handleKeyPress(event) {
   switch (event.key) {
     case 'a':
-      moveTetrominoLeft();
-      break;
+        if (!isPaused) moveTetrominoLeft(); 
+        break;
     case 'd':
-      moveTetrominoRight();
-      break;
+        if (!isPaused) moveTetrominoRight();
+        break;
     case 's':
-      startMoveDown();
-      break;
+        if (!isPaused) startMoveDown();
+        break;
     case 'q':
-      rotateTetrominoAntiClockwise();
-      break;
+        if (!isPaused) rotateTetrominoAntiClockwise();
+        break;
     case 'e':
-      rotateTetrominoClockwise();
-      break;
+        if (!isPaused) rotateTetrominoClockwise();
+        break;
+    case 'Escape':
+        togglePause();
+        break;
   }
 }
 
 function handleKeyRelease(event) {
-  if (event.key === 's') stopMoveDown();
+  if (event.key === 's' && !isPaused) stopMoveDown();
 }
 
 // Start the game
