@@ -12,6 +12,9 @@ const COLS = 10;
 const BLOCK_SIZE = 30;
 const COLORS = ['red', 'blue', 'lightgreen', 'yellow', 'cyan', 'magenta', 'pink'];
 
+// Scoring
+let score = 0;
+
 // Sounds
 const rotateClockwiseSound = new Audio('sounds/rotateClockwise.wav')
 const rotateAntiClockwiseSound = new Audio('sounds/rotateAntiClockwise.wav')
@@ -278,6 +281,21 @@ function clearLines() {
       y--;
     }
   }
+
+  // Scoring logic
+  switch (clearTimes) {
+    case 1: score += 100; break;
+    case 2: score += 300; break;
+    case 3: score += 500; break;
+    case 4: score += 800; break;
+  }
+
+  // Update the score display
+  document.getElementById('score-display').innerText = `Score: ${score}`;
+
+
+
+  // Play sounds
   if(clearTimes == 0){
     return;
   }else if (clearTimes == 4){
